@@ -1,8 +1,6 @@
 """
 Dashboard Biaya Asuransi Kesehatan - Statistika dan Probabilitas 1 (Kelas A)
 
-Jalankan dari terminal (di dalam folder ini):
-    streamlit run dashboard.py
 """
 from pathlib import Path
 
@@ -11,9 +9,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-# ======================================================================
-# 1. KONFIGURASI HALAMAN
-# ======================================================================
+#config halaman
+
 st.set_page_config(page_title="Dashboard Asuransi", page_icon="💜", layout="wide")
 
 DATA_PATH = Path(__file__).parent / "data.csv"
@@ -21,15 +18,13 @@ UNGU, ORANYE = "#7C3AED", "#FB923C"
 NAMA_PEROKOK = {"yes": "Perokok", "no": "Bukan perokok"}
 WARNA_PEROKOK = {"yes": UNGU, "no": ORANYE}
 
+# fungsi bantu
 
-# ======================================================================
-# 2. FUNGSI BANTU
-# ======================================================================
-@st.cache_data          # data dibaca sekali saja, bukan setiap interaksi
+@st.cache_data 
 def muat_data(path):
     df = pd.read_csv(path)
-    df = df.drop_duplicates().dropna()          # wrangling: buang duplikat dan data kosong
-    bawah = (df["age"] // 10) * 10              # kelompok usia per 10 tahun
+    df = df.drop_duplicates().dropna()
+    bawah = (df["age"] // 10) * 10
     df["kelompok_usia"] = bawah.astype(str) + "-" + (bawah + 9).astype(str)
     return df
 
@@ -66,9 +61,8 @@ df = muat_data(DATA_PATH)
 kolom_numerik = ["age", "bmi", "children", "charges"]
 kolom_kategori = ["sex", "smoker", "region"]
 
-# ======================================================================
-# 3. SIDEBAR: FILTER
-# ======================================================================
+# side bar
+
 st.sidebar.title("💜 MediCost")
 st.sidebar.caption("Analisis Biaya Asuransi Kesehatan")
 
@@ -90,9 +84,8 @@ if df_f.empty:
     st.warning("Tidak ada data setelah difilter. Longgarkan filter di sidebar.")
     st.stop()
 
-# ======================================================================
-# 4. HALAMAN UTAMA
-# ======================================================================
+# halaman utama
+
 st.title("💜 Dashboard Biaya Asuransi Kesehatan")
 st.caption(f"Data terpilih: {len(df_f)} dari {len(df)} baris")
 st.info(
@@ -100,7 +93,7 @@ st.info(
     "(2) Apakah ada perbedaan rata-rata biaya antar wilayah dan jenis kelamin?"
 )
 
-# ---------- Ringkasan angka ----------
+# Ringkasan angka
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Total Peserta", f"{len(df_f):,}")
 k2.metric("Rata-rata Biaya", f"${df_f['charges'].mean():,.0f}")
@@ -111,7 +104,7 @@ tab_ringkas, tab_vis, tab_stat, tab_data = st.tabs(
     ["🏠 Ringkasan", "📈 Visualisasi", "🧮 Statistik", "📋 Data"]
 )
 
-# ----------------------------- TAB RINGKASAN --------------------------
+# Ringkasan
 with tab_ringkas:
     kiri, kanan = st.columns([2, 1])
 
@@ -163,7 +156,7 @@ with tab_ringkas:
         g_wil = df_f.groupby("region")["charges"].mean().sort_values(ascending=False)
         st.info(f"📍 Wilayah tertinggi: {g_wil.index[0]} (rata-rata ${g_wil.iloc[0]:,.0f}).")
 
-# --------------------------- TAB VISUALISASI --------------------------
+# Visualnya
 with tab_vis:
     stat = hitung_statistik(df_f["charges"])
     a, b = st.columns(2)
@@ -231,7 +224,7 @@ with tab_vis:
     st.caption("Selisih antar wilayah kecil dibanding selisih perokok vs bukan perokok, "
                "jadi wilayah bukan faktor utama biaya.")
 
-# --------------------------- TAB STATISTIK ----------------------------
+# Bagian Statistik
 with tab_stat:
     kolom = st.selectbox("Kolom yang dianalisis", kolom_numerik, index=3)
     stat = hitung_statistik(df_f[kolom])
@@ -269,7 +262,7 @@ with tab_stat:
     st.dataframe(df_f[kolom_numerik].corr().round(2))
     st.caption("Mendekati 1 berarti hubungan positif kuat. Usia paling berkorelasi dengan biaya; jumlah anak hampir tidak.")
 
-# ----------------------------- TAB DATA -------------------------------
+# BAGIAN DATA
 with tab_data:
     c1, c2, c3 = st.columns(3)
     c1.metric("Jumlah baris", len(df_f))
